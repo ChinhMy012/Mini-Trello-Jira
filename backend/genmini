@@ -1,0 +1,60 @@
+📑 PROJECT BLUEPRINT: MINI TRELLO (SPRING BOOT & REACT)
+1. Stack Công nghệ & Cấu trúc
+Backend: Java 21, Spring Boot 3.x, Maven.
+
+Frontend: ReactJS (Vite), Axios, React Router Dom.
+
+Database: MySQL 8.0 chạy trên Docker (Port 3308).
+
+Cấu trúc Folder: Dự án dạng Monorepo (Thư mục gốc chứa /backend và /frontend).
+
+2. Quy chuẩn Phản hồi API (Standard Response)
+Tất cả các API phải được bọc trong class ApiResponse<T> để thống nhất dữ liệu trả về cho Frontend:
+
+Format JSON:
+
+JSON
+{
+  "code": 1000,
+  "message": "Success",
+  "data": { ... }
+}
+Jackson Config: Sử dụng camelCase, định dạng ngày yyyy-MM-dd HH:mm:ss, không trả về các trường null.
+
+3. Xử lý Lỗi tập trung (Global Exception Handling)
+ErrorCode (Enum): Quản lý tập trung các mã lỗi (ví dụ: USER_NOT_FOUND(404, ...)).
+
+AppException: Custom RuntimeException nhận vào một ErrorCode.
+
+GlobalExceptionHandler: Sử dụng @ControllerAdvice để bắt tất cả Exception và ép về format ApiResponse.
+
+4. Cấu hình Database & Thực thể (Persistence)
+Auditing: Sử dụng AbstractMappedEntity (MappedSuperclass) để tự động quản lý createdAt và updatedAt.
+
+JPA Strategy: ddl-auto: update.
+
+Thiết kế bảng:
+
+User (owner) 1 -> n Board.
+
+Board 1 -> n ColumnEntity.
+
+ColumnEntity 1 -> n Task.
+
+5. Hạ tầng & Cấu hình (Infrastructure)
+CORS: Đã cấu hình cho phép http://localhost:5173 truy cập toàn bộ các phương thức (GET, POST, PUT, DELETE).
+
+Swagger/OpenAPI: Tích hợp tại /swagger-ui/index.html để kiểm thử API.
+
+Docker Compose: * Container Name: trello-mysql.
+
+Database: trello_db.
+
+Credentials: trello_user / trello_password.
+
+6. Quy tắc Phát triển (Development Rules)
+Naming Convention: Java (camelCase), Database (snake_case cho cột, plural cho bảng).
+
+Validation: Sử dụng Spring Validation, lỗi trả về qua GlobalExceptionHandler.
+
+Frontend-Backend: Kết nối qua RESTful API bằng Axios.
