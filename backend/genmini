@@ -1,60 +1,345 @@
-📑 PROJECT BLUEPRINT: MINI TRELLO (SPRING BOOT & REACT)
-1. Stack Công nghệ & Cấu trúc
-Backend: Java 21, Spring Boot 3.x, Maven.
+Dưới đây là bản cập nhật hoàn chỉnh cho tài liệu **PROJECT BLUEPRINT: MINI TRELLO**. Tôi đã tích hợp các thay đổi về luồng xử lý thủ công (Manual Mapping), tối ưu hóa `ApiResponse`, và các lưu ý kỹ thuật quan trọng mà chúng ta vừa xử lý xong.
 
-Frontend: ReactJS (Vite), Axios, React Router Dom.
+---
 
-Database: MySQL 8.0 chạy trên Docker (Port 3308).
+# 📑 PROJECT BLUEPRINT: MINI TRELLO (SPRING BOOT & REACT)
 
-Cấu trúc Folder: Dự án dạng Monorepo (Thư mục gốc chứa /backend và /frontend).
+## 1. Stack Công nghệ & Cấu trúc
 
-2. Quy chuẩn Phản hồi API (Standard Response)
-Tất cả các API phải được bọc trong class ApiResponse<T> để thống nhất dữ liệu trả về cho Frontend:
+*
+**Backend:** Java 21, Spring Boot 3.x, Maven.
 
-Format JSON:
 
-JSON
+*
+**Frontend:** ReactJS (Vite), Axios, React Router Dom.
+
+
+*
+**Database:** MySQL 8.0 chạy trên **Docker** (Port 3308).
+
+
+*
+**Cấu trúc Folder:** Dự án dạng Monorepo (Thư mục gốc chứa `/backend` và `/frontend`).
+
+
+
+## 2. Quy chuẩn Phản hồi API (Standard Response)
+
+Tất cả các API phải được bọc trong class `ApiResponse<T>` để thống nhất dữ liệu trả về cho Frontend:
+
+*
+**Mã thành công mặc định:** `1000`.
+
+
+* **Cấu trúc JSON:**
+```json
 {
   "code": 1000,
   "message": "Success",
   "data": { ... }
 }
-Jackson Config: Sử dụng camelCase, định dạng ngày yyyy-MM-dd HH:mm:ss, không trả về các trường null.
 
-3. Xử lý Lỗi tập trung (Global Exception Handling)
-ErrorCode (Enum): Quản lý tập trung các mã lỗi (ví dụ: USER_NOT_FOUND(404, ...)).
+```
 
-AppException: Custom RuntimeException nhận vào một ErrorCode.
 
-GlobalExceptionHandler: Sử dụng @ControllerAdvice để bắt tất cả Exception và ép về format ApiResponse.
+*
+**Jackson Config:** Sử dụng `camelCase`, định dạng ngày `yyyy-MM-dd HH:mm:ss`, ẩn các trường `null` (`@JsonInclude(JsonInclude.Include.NON_NULL)`).
 
-4. Cấu hình Database & Thực thể (Persistence)
-Auditing: Sử dụng AbstractMappedEntity (MappedSuperclass) để tự động quản lý createdAt và updatedAt.
 
-JPA Strategy: ddl-auto: update.
+*
+**Tính năng bổ trợ:** Sử dụng các phương thức static như `ApiResponse.success()` hoặc `ApiResponse.OK()` để trả về phản hồi nhanh.
 
-Thiết kế bảng:
 
-User (owner) 1 -> n Board.
 
-Board 1 -> n ColumnEntity.
+## 3. Xử lý Lỗi tập trung (Global Exception Handling)
 
-ColumnEntity 1 -> n Task.
+*
+**ErrorCode (Enum):** Quản lý tập trung các mã lỗi (ví dụ: `USER_NOT_FOUND(404, ...)`), mỗi lỗi đi kèm một `code` định danh riêng.
 
-5. Hạ tầng & Cấu hình (Infrastructure)
-CORS: Đã cấu hình cho phép http://localhost:5173 truy cập toàn bộ các phương thức (GET, POST, PUT, DELETE).
 
-Swagger/OpenAPI: Tích hợp tại /swagger-ui/index.html để kiểm thử API.
+*
+**AppException:** Custom RuntimeException nhận vào một `ErrorCode`.
 
-Docker Compose: * Container Name: trello-mysql.
 
-Database: trello_db.
+*
+**GlobalExceptionHandler:** Sử dụng `@ControllerAdvice` để bắt tất cả Exception và ép về format `ApiResponse` chuẩn.
 
-Credentials: trello_user / trello_password.
 
-6. Quy tắc Phát triển (Development Rules)
-Naming Convention: Java (camelCase), Database (snake_case cho cột, plural cho bảng).
 
-Validation: Sử dụng Spring Validation, lỗi trả về qua GlobalExceptionHandler.
+## 4. Cấu hình Database & Thực thể (Persistence)
 
-Frontend-Backend: Kết nối qua RESTful API bằng Axios.
+*
+**Auditing:** Sử dụng `AbstractMappedEntity` (MappedSuperclass) để tự động quản lý `createdAt` và `updatedAt`.
+
+
+*
+**JPA Strategy:** `ddl-auto: update`.
+
+
+*
+**Thiết kế bảng:** `User` 1 -> n `Board` -> n `ColumnEntity` -> n `Task`.
+
+
+
+## 5. Hạ tầng & Cấu hình (Infrastructure)
+
+*
+**CORS:** Cho phép `http://localhost:5173` truy cập đầy đủ các phương thức (GET, POST, PUT, DELETE).
+
+
+*
+**Swagger/OpenAPI:** Tích hợp tại `/swagger-ui/index.html` để kiểm thử API.
+
+
+*
+**Docker Compose:** Container `trello-mysql`, DB `trello_db`, Port `3308`.
+
+
+
+## 6. Quy tắc Phát triển (Development Rules)
+
+*
+**Naming:** Java (camelCase), Database (snake_case cho cột, plural cho bảng).
+
+
+*
+**Validation:** Sử dụng Spring Validation, bắt lỗi qua `GlobalExceptionHandler`.
+
+
+*
+**Visibility:** Tất cả các lớp Service, Repository, DTO phải là `public` để tránh lỗi truy cập giữa các package.
+
+
+
+## 7. Tối ưu hóa Luồng Phản hồi (Response Optimization)
+
+*
+**Response Wrapping tự động:** Sử dụng `ResponseBodyAdvice` (class `ResponseHandler`) để tự động bọc kết quả từ Controller vào `ApiResponse`.
+
+
+*
+**Controller Clean Code:** Controller chỉ trả về dữ liệu thô (DTO/List), không khai báo thủ công `ApiResponse` trong từng method.
+
+
+*
+**Lưu ý kỹ thuật:** Luôn sử dụng `@Builder.Default` hoặc gán giá trị trực tiếp cho trường `code = 1000` để tránh bị Jackson mặc định về `0`.
+
+
+
+## 8. Quy tắc về Truy cập & Đóng gói (Access & Packaging Rules)
+
+* **Tách biệt DTO:**
+*
+`UserCreationRequest`: Nhận và validate đầu vào.
+
+
+*
+`UserResponse`: Trả dữ liệu ra ngoài, tuyệt đối không trả mật khẩu.
+
+
+
+
+
+## 9. Luồng xử lý nghiệp vụ (Business Logic Flow) - CẬP NHẬT
+
+1.
+**Validate:** Kiểm tra dữ liệu tại Controller bằng `@Valid`.
+
+
+2.
+**Check:** Service kiểm tra logic nghiệp vụ (trùng lặp, tồn tại).
+
+
+3.
+**Manual Map:** Chuyển đổi DTO <-> Entity thủ công bằng `@Builder` của Lombok để đảm bảo minh bạch, kiểm soát hoàn toàn dữ liệu và tránh các lỗi Bean phát sinh từ MapStruct.
+
+
+4.
+**Persistence:** Lưu trữ qua Spring Data JPA.
+
+
+
+## 10. Trạng thái hiện tại của dự án
+
+*
+**Backend:** Đã hoàn thiện khung Core (Exception, Response Handler, Auditing).
+
+
+*
+**Tính năng:** Hoàn tất luồng **Đăng ký người dùng** (Test Postman OK, trả về mã 1000).
+
+
+*
+**Kế hoạch tiếp theo:** Triển khai **Password Hashing (BCrypt)** để bảo mật mật khẩu trong Database.Dưới đây là bản cập nhật hoàn chỉnh cho tài liệu **PROJECT BLUEPRINT: MINI TRELLO**. Tôi đã tích hợp các thay đổi về luồng xử lý thủ công (Manual Mapping), tối ưu hóa `ApiResponse`, và các lưu ý kỹ thuật quan trọng mà chúng ta vừa xử lý xong.
+
+                                                                                                    ---
+
+                                                                                                    # 📑 PROJECT BLUEPRINT: MINI TRELLO (SPRING BOOT & REACT)
+
+                                                                                                    ## 1. Stack Công nghệ & Cấu trúc
+
+                                                                                                    *
+                                                                                                    **Backend:** Java 21, Spring Boot 3.x, Maven.
+
+
+                                                                                                    *
+                                                                                                    **Frontend:** ReactJS (Vite), Axios, React Router Dom.
+
+
+                                                                                                    *
+                                                                                                    **Database:** MySQL 8.0 chạy trên **Docker** (Port 3308).
+
+
+                                                                                                    *
+                                                                                                    **Cấu trúc Folder:** Dự án dạng Monorepo (Thư mục gốc chứa `/backend` và `/frontend`).
+
+
+
+                                                                                                    ## 2. Quy chuẩn Phản hồi API (Standard Response)
+
+                                                                                                    Tất cả các API phải được bọc trong class `ApiResponse<T>` để thống nhất dữ liệu trả về cho Frontend:
+
+                                                                                                    *
+                                                                                                    **Mã thành công mặc định:** `1000`.
+
+
+                                                                                                    * **Cấu trúc JSON:**
+                                                                                                    ```json
+                                                                                                    {
+                                                                                                      "code": 1000,
+                                                                                                      "message": "Success",
+                                                                                                      "data": { ... }
+                                                                                                    }
+
+                                                                                                    ```
+
+
+                                                                                                    *
+                                                                                                    **Jackson Config:** Sử dụng `camelCase`, định dạng ngày `yyyy-MM-dd HH:mm:ss`, ẩn các trường `null` (`@JsonInclude(JsonInclude.Include.NON_NULL)`).
+
+
+                                                                                                    *
+                                                                                                    **Tính năng bổ trợ:** Sử dụng các phương thức static như `ApiResponse.success()` hoặc `ApiResponse.OK()` để trả về phản hồi nhanh.
+
+
+
+                                                                                                    ## 3. Xử lý Lỗi tập trung (Global Exception Handling)
+
+                                                                                                    *
+                                                                                                    **ErrorCode (Enum):** Quản lý tập trung các mã lỗi (ví dụ: `USER_NOT_FOUND(404, ...)`), mỗi lỗi đi kèm một `code` định danh riêng.
+
+
+                                                                                                    *
+                                                                                                    **AppException:** Custom RuntimeException nhận vào một `ErrorCode`.
+
+
+                                                                                                    *
+                                                                                                    **GlobalExceptionHandler:** Sử dụng `@ControllerAdvice` để bắt tất cả Exception và ép về format `ApiResponse` chuẩn.
+
+
+
+                                                                                                    ## 4. Cấu hình Database & Thực thể (Persistence)
+
+                                                                                                    *
+                                                                                                    **Auditing:** Sử dụng `AbstractMappedEntity` (MappedSuperclass) để tự động quản lý `createdAt` và `updatedAt`.
+
+
+                                                                                                    *
+                                                                                                    **JPA Strategy:** `ddl-auto: update`.
+
+
+                                                                                                    *
+                                                                                                    **Thiết kế bảng:** `User` 1 -> n `Board` -> n `ColumnEntity` -> n `Task`.
+
+
+
+                                                                                                    ## 5. Hạ tầng & Cấu hình (Infrastructure)
+
+                                                                                                    *
+                                                                                                    **CORS:** Cho phép `http://localhost:5173` truy cập đầy đủ các phương thức (GET, POST, PUT, DELETE).
+
+
+                                                                                                    *
+                                                                                                    **Swagger/OpenAPI:** Tích hợp tại `/swagger-ui/index.html` để kiểm thử API.
+
+
+                                                                                                    *
+                                                                                                    **Docker Compose:** Container `trello-mysql`, DB `trello_db`, Port `3308`.
+
+
+
+                                                                                                    ## 6. Quy tắc Phát triển (Development Rules)
+
+                                                                                                    *
+                                                                                                    **Naming:** Java (camelCase), Database (snake_case cho cột, plural cho bảng).
+
+
+                                                                                                    *
+                                                                                                    **Validation:** Sử dụng Spring Validation, bắt lỗi qua `GlobalExceptionHandler`.
+
+
+                                                                                                    *
+                                                                                                    **Visibility:** Tất cả các lớp Service, Repository, DTO phải là `public` để tránh lỗi truy cập giữa các package.
+
+
+
+                                                                                                    ## 7. Tối ưu hóa Luồng Phản hồi (Response Optimization)
+
+                                                                                                    *
+                                                                                                    **Response Wrapping tự động:** Sử dụng `ResponseBodyAdvice` (class `ResponseHandler`) để tự động bọc kết quả từ Controller vào `ApiResponse`.
+
+
+                                                                                                    *
+                                                                                                    **Controller Clean Code:** Controller chỉ trả về dữ liệu thô (DTO/List), không khai báo thủ công `ApiResponse` trong từng method.
+
+
+                                                                                                    *
+                                                                                                    **Lưu ý kỹ thuật:** Luôn sử dụng `@Builder.Default` hoặc gán giá trị trực tiếp cho trường `code = 1000` để tránh bị Jackson mặc định về `0`.
+
+
+
+                                                                                                    ## 8. Quy tắc về Truy cập & Đóng gói (Access & Packaging Rules)
+
+                                                                                                    * **Tách biệt DTO:**
+                                                                                                    *
+                                                                                                    `UserCreationRequest`: Nhận và validate đầu vào.
+
+
+                                                                                                    *
+                                                                                                    `UserResponse`: Trả dữ liệu ra ngoài, tuyệt đối không trả mật khẩu.
+
+
+
+
+
+                                                                                                    ## 9. Luồng xử lý nghiệp vụ (Business Logic Flow) - CẬP NHẬT
+
+                                                                                                    1.
+                                                                                                    **Validate:** Kiểm tra dữ liệu tại Controller bằng `@Valid`.
+
+
+                                                                                                    2.
+                                                                                                    **Check:** Service kiểm tra logic nghiệp vụ (trùng lặp, tồn tại).
+
+
+                                                                                                    3.
+                                                                                                    **Manual Map:** Chuyển đổi DTO <-> Entity thủ công bằng `@Builder` của Lombok để đảm bảo minh bạch, kiểm soát hoàn toàn dữ liệu và tránh các lỗi Bean phát sinh từ MapStruct.
+
+
+                                                                                                    4.
+                                                                                                    **Persistence:** Lưu trữ qua Spring Data JPA.
+
+
+
+                                                                                                    ## 10. Trạng thái hiện tại của dự án
+
+                                                                                                    *
+                                                                                                    **Backend:** Đã hoàn thiện khung Core (Exception, Response Handler, Auditing).
+
+
+                                                                                                    *
+                                                                                                    **Tính năng:** Hoàn tất luồng **Đăng ký người dùng** (Test Postman OK, trả về mã 1000).
+
+
+                                                                                                    *
+                                                                                                    **Kế hoạch tiếp theo:** Triển khai **Password Hashing (BCrypt)** để bảo mật mật khẩu trong Database.
