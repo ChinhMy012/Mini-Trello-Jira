@@ -1,7 +1,7 @@
 package com.minitrello.backend.exception;
 
 import com.minitrello.backend.common.ErrorCode;
-import com.minitrello.backend.dto.ApiResponse;
+import com.minitrello.backend.dto.response.ApiResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;

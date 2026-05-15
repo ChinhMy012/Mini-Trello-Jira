@@ -1,6 +1,6 @@
 package com.minitrello.backend.config;
 
-import com.minitrello.backend.dto.ApiResponse;
+import com.minitrello.backend.dto.response.ApiResponse;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConverter;

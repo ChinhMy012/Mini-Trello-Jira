@@ -11,7 +11,8 @@ public enum ErrorCode {
     BOARD_NOT_FOUND(404, "Không tìm thấy bảng công việc", HttpStatus.NOT_FOUND),
     USERNAME_INVALID(1001, "Username phải có ít nhất 4 ký tự", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1002, "Password phải có ít nhất 8 ký tự", HttpStatus.BAD_REQUEST),
-    EMAIL_INVALID(1003, "Email không đúng định dạng", HttpStatus.BAD_REQUEST)
+    EMAIL_INVALID(1003, "Email không đúng định dạng", HttpStatus.BAD_REQUEST),
+    UNAUTHENTICATED(401, "Sai thông tin đăng nhập", HttpStatus.BAD_REQUEST)
     ;
 
     private final int code;

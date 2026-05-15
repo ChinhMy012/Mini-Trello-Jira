@@ -1,4 +1,4 @@
-package com.minitrello.backend.dto;
+package com.minitrello.backend.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Size;

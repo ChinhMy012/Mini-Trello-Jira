@@ -1,4 +1,4 @@
-package com.minitrello.backend.dto;
+package com.minitrello.backend.dto.response;
 
 import lombok.*;
 

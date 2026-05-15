@@ -1,4 +1,4 @@
-package com.minitrello.backend.dto;
+package com.minitrello.backend.dto.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
@@ -11,6 +11,7 @@ import lombok.*;
 @JsonInclude(JsonInclude.Include.NON_NULL) // Ẩn các field null khi trả về JSON
 public class ApiResponse<T> {
     // Gán giá trị mặc định là 1000 ngay tại đây
+    @Builder.Default
     private int code = 1000;
     private String message;
     private T data;

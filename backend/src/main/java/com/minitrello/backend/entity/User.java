@@ -2,7 +2,10 @@ package com.minitrello.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -28,4 +31,17 @@ public class User extends AbstractMappedEntity {
 
     @OneToMany(mappedBy = "owner", cascade = CascadeType.ALL)
     private List<Board> boards;
+
+    @Column(name = "token_version")
+    private Integer tokenVersion = 1; // Mặc định là 1 khi mới tạo tài khoản
+
+    // --- ĐÃ TÁCH ROLE RIÊNG ---
+    @Builder.Default
+    @ManyToMany(fetch = FetchType.EAGER) // Load user là load luôn role của họ
+    @JoinTable(
+            name = "user_roles", // Tên bảng trung gian
+            joinColumns = @JoinColumn(name = "user_id"), // Khóa ngoại trỏ về bảng users
+            inverseJoinColumns = @JoinColumn(name = "role_name") // Khóa ngoại trỏ về bảng roles
+    )
+    private Set<Role> roles = new HashSet<>();
 }
