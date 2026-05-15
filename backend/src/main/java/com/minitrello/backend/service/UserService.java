@@ -11,6 +11,8 @@ import com.minitrello.backend.exception.AppException;
 import com.minitrello.backend.repository.RoleRepository;
 import com.minitrello.backend.repository.UserRepository;
 import com.minitrello.backend.security.JwtProvider;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,5 +95,14 @@ public class UserService {
                 .authenticated(true)
                 .token(token)
                 .build();
+    }
+
+    public void logout(HttpServletResponse response) {
+        // Tạo một cookie trùng tên nhưng thời gian sống (maxAge) bằng 0
+        Cookie cookie = new Cookie("jwt", null);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge(0); // Lệnh xóa cookie ngay lập tức
+        response.addCookie(cookie);
     }
 }

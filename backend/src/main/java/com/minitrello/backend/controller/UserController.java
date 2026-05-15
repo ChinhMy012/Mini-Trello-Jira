@@ -46,4 +46,13 @@ public class UserController {
                 .data("Chúc mừng! Bạn đã vượt qua chốt chặn Security và truy cập được API nội bộ.")
                 .build();
     }
+
+    @PostMapping("/logout")
+    public ApiResponse<Void> logout(HttpServletResponse response) {
+        userService.logout(response);
+        return ApiResponse.<Void>builder()
+                .code(1000)
+                .message("Đăng xuất thành công") // Thoải mái ghi lời nhắn tùy thích
+                .build();
+    }
 }
