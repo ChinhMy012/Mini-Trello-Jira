@@ -1,6 +1,8 @@
 package com.minitrello.backend.security;
 
 import com.minitrello.backend.entity.User;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
@@ -48,5 +50,28 @@ public class JwtProvider {
     // Hàm phụ trợ lấy Key từ chuỗi cấu hình
     private Key getSecretKey() {
         return Keys.hmacShaKeyFor(signerKey.getBytes());
+    }
+
+    // Hàm 1: Kiểm tra tính hợp lệ của Token
+    public boolean validateToken(String token) {
+        try {
+            Jwts.parserBuilder()
+                    .setSigningKey(getSecretKey())
+                    .build()
+                    .parseClaimsJws(token);
+            return true;
+        } catch (JwtException | IllegalArgumentException e) {
+            log.error("Token không hợp lệ hoặc đã hết hạn: {}", e.getMessage());
+            return false;
+        }
+    }
+
+    // Hàm 2: Trích xuất toàn bộ thông tin (Claims) từ Payload của Token
+    public Claims getClaims(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(getSecretKey())
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
     }
 }

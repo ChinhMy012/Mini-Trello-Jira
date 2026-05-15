@@ -39,4 +39,11 @@ public class UserController {
                 .data(loginResponse)
                 .build();
     }
+    @GetMapping("/me")
+    public ApiResponse<String> getMyProfile() {
+        // API này đã bị khóa, yêu cầu phải có Token hợp lệ
+        return ApiResponse.<String>builder()
+                .data("Chúc mừng! Bạn đã vượt qua chốt chặn Security và truy cập được API nội bộ.")
+                .build();
+    }
 }

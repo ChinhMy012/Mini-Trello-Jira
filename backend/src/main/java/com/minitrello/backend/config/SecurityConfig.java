@@ -1,14 +1,21 @@
 package com.minitrello.backend.config;
 
+import com.minitrello.backend.security.JwtAuthenticationFilter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@RequiredArgsConstructor
 public class SecurityConfig {
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -17,16 +24,18 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Tắt CSRF: Nếu không tắt cái này, 100% các request POST (như register) sẽ bị chặn lại và báo lỗi 403.
-                .csrf(csrf -> csrf.disable())
-
-                // 2. Cấu hình phân luồng API
+                .csrf(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        // Cấp quyền đi qua tự do cho Register và Login
                         .requestMatchers("/api/users/register", "/api/users/login").permitAll()
-                        // Tất cả các API khác phải có thẻ (Token) mới cho vào
+                        // Thêm Swagger vào danh sách miễn kiểm tra (nếu bạn có dùng)
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
-                );
+                )
+                // Tắt session của Spring Security vì mình dùng Stateless JWT
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+
+                // --- QUAN TRỌNG NHẤT: Đặt JWT Filter lên trước Filter kiểm tra User/Password mặc định ---
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
