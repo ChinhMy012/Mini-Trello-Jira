@@ -1,0 +1,156 @@
+Dưới đây là bản cập nhật hoàn chỉnh cho tài liệu API Authentication (dựa trên file `note` của bạn). Mình đã giữ nguyên các phần cực kỳ chi tiết của bạn và **bổ sung thêm phần API Đăng xuất (Logout)** cũng như lưu ý về **lỗi 1006 (Kick-out)** để team Frontend nắm trọn vẹn luồng.
+
+Bạn hãy copy toàn bộ nội dung dưới đây và gửi thẳng cho team FE nhé:
+
+---
+
+# 🚀 TÀI LIỆU TÍCH HỢP API: AUTHENTICATION (Bản Final dành cho Frontend)
+
+## 📌 QUY CHUẨN CHUNG (GLOBAL RULES)
+
+- **Base URL (Local):** `http://localhost:8080`
+
+- **Content-Type:** `application/json`
+
+- **Cấu trúc Response Chuẩn:** Tất cả API trả về đều được bọc trong một object chuẩn như sau:
+
+```json
+{
+  "code": 1000,
+  "message": "Success",
+  "data": { ... } // Dữ liệu thực tế sẽ nằm ở đây
+}
+
+```
+
+- **Lưu ý mã lỗi (code):**
+- `1000`: Thành công.
+
+- `1002`: Username/Email đã tồn tại (Lỗi Validate đăng ký).
+- `1006`: Unauthenticated (Sai password, user không tồn tại, hoặc **phiên đăng nhập đã bị hủy do user đăng nhập trên thiết bị khác**).
+
+- Các mã khác: Lỗi hệ thống (FE dựa vào trường `message` để hiển thị thông báo).
+
+---
+
+## ⚙️ CẤU HÌNH BẮT BUỘC (AXIOS)
+
+Hệ thống sử dụng **HttpOnly Cookie** để bảo mật. Frontend **BẮT BUỘC** phải cấu hình thư viện `axios` có thêm dòng `withCredentials: true` để các request gửi lên Backend mang theo được Cookie.
+
+**Ví dụ cấu hình Axios cho FE:**
+
+```javascript
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: "http://localhost:8080",
+  withCredentials: true, // <--- Bắt buộc phải có dòng này để gửi và nhận Cookie
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export default api;
+```
+
+---
+
+## 1. API ĐĂNG KÝ (REGISTER)
+
+Sử dụng để tạo tài khoản mới. Hệ thống sẽ tự động cấp quyền mặc định là `ROLE_USER`.
+
+- **Method:** `POST`
+
+- **Endpoint:** `/api/users/register`
+
+- **Request Body:**
+
+```json
+{
+  "username": "chinhne2024",
+  "password": "Password123!",
+  "email": "chinh@example.com"
+}
+```
+
+_(Ghi chú cho FE: Cần tự validate form ở client trước khi gửi, ví dụ: không để trống, đúng định dạng email)._
+
+- **Response - Thành công (200 OK):**
+
+```json
+{
+  "code": 1000,
+  "message": "Success",
+  "data": {
+    "id": 5,
+    "username": "chinhne2024",
+    "email": "chinh@example.com",
+    "roles": ["ROLE_USER"]
+  }
+}
+```
+
+---
+
+## 2. API ĐĂNG NHẬP (LOGIN)
+
+Thực hiện xác thực người dùng. Trình duyệt sẽ tự động nhận và lưu phiên đăng nhập.
+
+- **Method:** `POST`
+
+- **Endpoint:** `/api/users/login`
+
+- **Request Body:**
+
+```json
+{
+  "username": "chinhne2024",
+  "password": "Password123!"
+}
+```
+
+- **Response - Thành công (200 OK):**
+
+```json
+{
+  "code": 1000,
+  "message": "Success",
+  "data": {
+    "authenticated": true,
+    "token": "eyJhbGciOiJIUzI1NiJ9..."
+  }
+}
+```
+
+### ⚠️ LƯU Ý KHI LÀM LUỒNG LOGIN:
+
+1.  **Lưu ý State UI:** FE có thể lưu `token` trả về trong body vào biến state (Zustand/Redux/LocalStorage) để tự decode (bằng thư viện `jwt-decode`) lấy thông tin user hiển thị lên UI (như Tên, Role).
+
+2.  **Bảo mật Cookie:** Backend đã tự động đính kèm Token thực sự vào HttpOnly Cookie tên là `jwt`. Javascript của FE không thể (và không cần) đọc cookie này.
+
+3.  **Cơ chế Kick-out:** Nếu user đăng nhập ở một thiết bị/trình duyệt khác, phiên đăng nhập ở thiết bị cũ sẽ tự động bị hủy. Khi đó, mọi API FE gọi lên sẽ nhận về lỗi `code: 1006`. FE cần bắt lỗi này (thường dùng Interceptor của Axios) để đẩy user về trang Login.
+
+---
+
+## 3. API ĐĂNG XUẤT (LOGOUT)
+
+Sử dụng để xóa phiên đăng nhập hiện tại ở phía Server và yêu cầu trình duyệt tự động xóa Cookie `jwt`.
+
+- **Method:** `POST`
+- **Endpoint:** `/api/users/logout`
+- **Request Body:** Không có.
+- **Yêu cầu:** Phải đính kèm thông tin xác thực (`withCredentials: true`).
+- **Response - Thành công (200 OK):**
+
+```json
+{
+  "code": 1000,
+  "message": "Đăng xuất thành công"
+}
+```
+
+**Nhiệm vụ của FE:** Sau khi nhận phản hồi `1000` từ API này, FE cần dọn dẹp sạch sẽ các State/LocalStorage đang lưu thông tin User ở Client và chuyển hướng (redirect) người dùng về màn hình Login.
+
+---
+
+Bản này đã có đủ "đồ chơi" cho team FE rồi nhé! Từ cách gọi API, cách xử lý Cookie, cho đến dọn dẹp lúc Logout đều đã rõ ràng. Bạn gửi cho team FE là họ có thể bắt tay vào làm luôn được rồi!

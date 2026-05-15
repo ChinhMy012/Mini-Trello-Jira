@@ -1,0 +1,62 @@
+Để người khác (hoặc chính bạn sau này) đọc vào là hiểu ngay hệ thống đã đạt đến đâu, mình sẽ tổng kết lại toàn bộ "công trình" mà chúng ta đã xây dựng từ nãy đến giờ.
+
+Hiện tại, dự án **Mini Trello** của bạn đã hoàn thành trọn vẹn **Hệ thống Xác thực (Authentication System)** với tiêu chuẩn kỹ thuật cao.
+
+---
+
+## 🛠️ TỔNG KẾT THÀNH QUẢ DỰ ÁN (PHẦN AUTH)
+
+### 1. Giao diện người dùng (UI/UX)
+
+- **Phong cách:** Modern SaaS (Split-Screen Layout). Một bên là hình ảnh thương hiệu nghệ thuật, một bên là Form nhập liệu sạch sẽ.
+- **Công nghệ:** Sử dụng **Tailwind CSS** cho giao diện, **Lucide React** cho hệ thống icon và **Framer Motion** để tạo hiệu ứng chuyển động mượt mà (Smooth Transitions) khi chuyển giữa Đăng nhập và Đăng ký.
+- **Trải nghiệm:** Form có hiệu ứng `focus` mềm mại, thông báo lỗi rõ ràng và hỗ trợ Responsive (tự động ẩn hình ảnh trên điện thoại để tối ưu không gian).
+
+### 2. Kiến trúc Kết nối API (Networking)
+
+- **Thư viện:** Axios.
+- **Cấu hình bảo mật:** Đã bật `withCredentials: true`. Đây là phần quan trọng nhất để trình duyệt có thể nhận và gửi **HttpOnly Cookie (JWT)** từ Backend.
+- **Bộ lọc thông minh (Interceptors):** \* Tự động trả về dữ liệu tinh gọn (`response.data`).
+- **Cơ chế Kick-out:** Tự động phát hiện lỗi `1006` (hết hạn phiên hoặc đăng nhập nơi khác) để đá người dùng về trang Login và dọn dẹp bộ nhớ.
+
+### 3. Quản lý trạng thái (State Management)
+
+- **Thư viện:** Zustand (nhẹ và nhanh hơn Redux).
+- **Tính năng:** \* Lưu trữ trạng thái `isAuthenticated` và thông tin `user` toàn cục.
+- **Giải mã Token:** Tích hợp `jwt-decode` để đọc thông tin từ Token Backend trả về mà không cần gọi thêm API.
+- **Duy trì đăng nhập (Persistence):** Sử dụng Middleware để lưu trạng thái vào `localStorage`, giúp người dùng không bị văng ra khi nhấn F5.
+
+### 4. Luồng xử lý Logic (Logic Flow)
+
+- **Đăng ký:** Gửi `username`, `password`, `email`. Nhận phản hồi thành công (1000) và điều hướng về Login.
+- **Đăng nhập:** Gửi thông tin, nhận Token, giải mã lưu vào Store, và sẵn sàng chuyển hướng vào Dashboard.
+- **Đăng xuất:** Gọi API xóa Cookie Backend và dọn dẹp dữ liệu ở Frontend.
+
+---
+
+## 📂 CẤU TRÚC FILE ĐÃ HOÀN THÀNH
+
+```text
+src/
+├── api/
+│   ├── axiosClient.js  (Cấu hình Axios + Interceptor 1006)
+│   └── authApi.js      (Các hàm gọi API register, login, logout)
+├── store/
+│   └── useUserStore.js (Quản lý trạng thái User bằng Zustand + JWT Decode)
+└── pages/
+    └── Auth/
+        └── AuthPage.jsx (Giao diện Login/Register tổng hợp)
+
+```
+
+---
+
+## ⏭️ BƯỚC TIẾP THEO (DÀNH CHO NGƯỜI LÀM SAU)
+
+1. **Xây dựng Private Route:** Tạo một Component bọc ngoài để bảo vệ các trang bên trong (chỉ cho phép User đã đăng nhập vào).
+2. **Thiết kế Dashboard Layout:** Làm Sidebar, Header và khu vực hiển thị danh sách các Board.
+3. **Tích hợp API Board:** Bắt đầu viết API lấy danh sách bảng công việc từ Backend để hiển thị lên màn hình chính.
+
+> **Ghi chú:** Toàn bộ code đã được tối ưu để không còn lỗi ESLint (React không dùng, biến dư thừa) và đã sẵn sàng để chạy thực tế với Backend tại `http://localhost:8080`.
+
+Bản tổng kết này đã đủ bao quát hết những gì "xịn xò" mà bạn đã làm chưa? Nếu cần thêm chi tiết nào vào "Nhật ký dự án" này, cứ bảo mình nhé!
