@@ -5,8 +5,10 @@ import com.minitrello.backend.dto.request.LoginRequest;
 import com.minitrello.backend.dto.request.UserCreationRequest;
 import com.minitrello.backend.dto.response.LoginResponse;
 import com.minitrello.backend.dto.response.UserResponse;
+import com.minitrello.backend.entity.Role;
 import com.minitrello.backend.entity.User;
 import com.minitrello.backend.exception.AppException;
+import com.minitrello.backend.repository.RoleRepository;
 import com.minitrello.backend.repository.UserRepository;
 import com.minitrello.backend.security.JwtProvider;
 import jakarta.transaction.Transactional;
@@ -15,6 +17,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor // Tự động Inject Repository và Mapper
 @Slf4j
@@ -22,6 +27,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtProvider jwtProvider;
+    private final RoleRepository roleRepository;
 
     public UserResponse createUser(UserCreationRequest request) {
         log.info("Đang xử lý đăng ký cho user: {}", request.getUsername());
@@ -38,11 +44,17 @@ public class UserService {
                 .email(request.getEmail())
                 .tokenVersion(1) // Khởi tạo version đầu tiên
                 .build();
+        // 3. LOGIC MỚI: TỰ ĐỘNG GÁN QUYỀN ROLE_USER
+        // Tìm quyền ROLE_USER trong DB. Nếu chưa có (chạy lần đầu), tự động tạo mới!
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseGet(() -> roleRepository.save(Role.builder().name("ROLE_USER").build()));
 
-        // 3. Lưu vào DB
+        // Gán quyền cho user (Nhớ đảm bảo class User của bạn có thuộc tính 'roles' kiểu Set<Role>)
+        user.setRoles(new HashSet<>(List.of(userRole)));
+        // 4. Lưu vào DB
         user = userRepository.save(user);
 
-        // 4. Chuyển Entity sang Response DTO (Thủ công)
+        // 5. Chuyển Entity sang Response DTO (Thủ công)
         return UserResponse.builder()
                 .id(user.getId())
                 .username(user.getUsername())
