@@ -8,6 +8,7 @@ import com.minitrello.backend.exception.AppException;
 import com.minitrello.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class UserService {
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
     public UserResponse createUser(UserCreationRequest request) {
         log.info("Đang xử lý đăng ký cho user: {}", request.getUsername());
@@ -27,8 +29,9 @@ public class UserService {
         // 2. Chuyển DTO sang Entity (Thủ công)
         User user = User.builder()
                 .username(request.getUsername())
-                .password(request.getPassword()) // Sau này sẽ hash ở đây
+                .password(passwordEncoder.encode(request.getPassword())) // <--- QUAN TRỌNG
                 .email(request.getEmail())
+                .tokenVersion(1) // Khởi tạo version đầu tiên
                 .build();
 
         // 3. Lưu vào DB
