@@ -12,7 +12,10 @@ public enum ErrorCode {
     USERNAME_INVALID(1001, "Username phải có ít nhất 4 ký tự", HttpStatus.BAD_REQUEST),
     PASSWORD_INVALID(1002, "Password phải có ít nhất 8 ký tự", HttpStatus.BAD_REQUEST),
     EMAIL_INVALID(1003, "Email không đúng định dạng", HttpStatus.BAD_REQUEST),
-    UNAUTHENTICATED(401, "Sai thông tin đăng nhập", HttpStatus.BAD_REQUEST)
+    UNAUTHENTICATED(401, "Sai thông tin đăng nhập", HttpStatus.BAD_REQUEST),
+    FORBIDDEN_ACCESS(1003, "Bạn không có quyền truy cập vào dữ liệu này", HttpStatus.FORBIDDEN),
+    COLUMN_NOT_FOUND(1004, "Không tìm thấy cột công việc", HttpStatus.NOT_FOUND),
+    TASK_NOT_FOUND(1015, "Không tìm thấy thẻ công việc", HttpStatus.NOT_FOUND);
     ;
 
     private final int code;

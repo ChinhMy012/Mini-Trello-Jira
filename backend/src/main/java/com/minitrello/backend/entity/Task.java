@@ -2,26 +2,24 @@ package com.minitrello.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "tasks")
-@Getter @Setter @NoArgsConstructor @AllArgsConstructor
-public class Task {
+@Getter @Setter @NoArgsConstructor @AllArgsConstructor @Builder
+public class Task extends AbstractMappedEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String title;
-    private String description;
-    private int positionOrder;
-    private LocalDateTime deadline;
 
-    @ManyToOne
-    @JoinColumn(name = "column_id")
-    private ColumnEntity column;
+    @Column(columnDefinition = "TEXT")
+    private String content;
 
-    @ManyToOne
-    @JoinColumn(name = "assignee_id")
-    private User assignee;
+    private int position; // Vị trí thẻ trong cột
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "column_id", nullable = false)
+    private ColumnEntity columnEntity;
 }
